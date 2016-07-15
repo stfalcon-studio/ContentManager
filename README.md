@@ -1,5 +1,5 @@
 # ContentManager
-Library what helps getting photo or video from device gallery, from a cloud or from a camera. With fixed bugs for same problem devices like samsung or sony.
+Library what helps getting photo or video from device gallery, from a cloud or from a camera. With asynchronous load from cload and fixed bugs for same problem devices like samsung or sony.
 
 ### Download
 

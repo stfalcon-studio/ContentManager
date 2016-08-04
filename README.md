@@ -31,7 +31,7 @@ Then implement PickContentListener methods:
 * Success result callback
 *
 * @param uri         Content uri
-* @param contentType If you pick content can be Image or Video, if take only Image
+* @param contentType If you pick content can be Image or Video, if take - only Image
 */
 @Override
 public void onContentLoaded(Uri uri, String contentType) {

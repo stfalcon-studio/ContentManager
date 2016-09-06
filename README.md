@@ -1,5 +1,5 @@
 # ContentManager
-Library what helps getting photo or video from device gallery, from a cloud or from a camera. With asynchronous load from cload and fixed bugs for same problem devices like samsung or sony.
+Library for getting photo or video from a device gallery, cloud or camera. With asynchronous load from the cloud and fixed bugs for some problem devices like Samsung or Sony.
 
 ### Download
 
@@ -20,7 +20,7 @@ or Maven:
 
 ### Usage
 
-Implement callback interface
+Implement callback interface:
 ```java
 public class MainActivity extends AppCompatActivity implements ContentManager.PickContentListener {
 ```
@@ -74,17 +74,17 @@ public void onCanceled() {
 ```
 
 
-Declare field
+Declare field:
 ```java
 private ContentManager contentManager;
 ```
 
-Create instance. Where "this" is your activity
+Create instance where "this" is your activity:
 ```java
 contentManager = new ContentManager(this, this);
 ```
 
-Override onActivityResult method of activity. It is need for handle result
+Override onActivityResult method of activity. It is needed for handling the result:
 ```java
 @Override
 protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -93,7 +93,7 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 }
 ```
 
-Override onSaveInstanceState, onRestoreInstanceState. It is need for fix bug with some Samsung and Sony devices when taking photo in landscape mode
+Override onSaveInstanceState, onRestoreInstanceState. It is needed for fixing bugs with some Samsung and Sony devices when taking photo in a landscape mode:
 ```java
 @Override
 protected void onRestoreInstanceState(Bundle savedInstanceState) {
@@ -108,22 +108,22 @@ protected void onSaveInstanceState(Bundle outState) {
 }
 ```
 
-Pick image 
+Pick image: 
 ```java
 contentManager.pickContent(ContentManager.Content.IMAGE);
 ```
-Pick video
+Pick video:
 ```jave
 contentManager.pickContent(ContentManager.Content.VIDEO);
 ```
-If you will select content from cloud it will be load async and you can track progress with onLoadContentProgress method
+If you select content from cloud, it will be loaded asynchronously and you can track progress with onLoadContentProgress method.
 
-Take photo from camera
+Take photo from camera:
 ```
 contentManager.takePhoto();
 ```
 
-Look [Sample projects] [sample] for more information
+Take a look at [Sample projects] [sample] for more information
 
 ### License 
 

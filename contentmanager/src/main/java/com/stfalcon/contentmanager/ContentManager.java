@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2016 Anton Bevza stfalcon.com
- *
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p/>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,11 +16,13 @@
 
 package com.stfalcon.contentmanager;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
@@ -31,7 +33,9 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import java.io.File;
@@ -48,6 +52,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 public class ContentManager {
+    private final static int PERMISSION_REQUEST_CODE = 333;
 
     /**
      * For save and restore instance state
@@ -61,7 +66,6 @@ public class ContentManager {
      */
     private static final int CONTENT_PICKER = 15; // request codes
     private static final int CONTENT_TAKE = 16; //
-
     /**
      * Date and time the camera intent was started.
      */
@@ -98,6 +102,9 @@ public class ContentManager {
      */
     private Activity activity;
     private Fragment fragment;
+
+    private int savedTask;
+    private Content savedContent;
 
     public ContentManager(Activity activity, PickContentListener pickContentListener) {
         this.activity = activity;
@@ -169,56 +176,63 @@ public class ContentManager {
      * @param content image or video
      */
     public void pickContent(Content content) {
-        this.targetFile = createFile(content);
-        if (Build.VERSION.SDK_INT < 19) {
-            Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
-            photoPickerIntent.setType(content.toString());
-            if (fragment == null) {
-                activity.startActivityForResult(photoPickerIntent, CONTENT_PICKER);
-            } else {
-                fragment.startActivityForResult(photoPickerIntent, CONTENT_PICKER);
-            }
-        } else {
-            Intent photoPickerIntent = new Intent(Intent.ACTION_GET_CONTENT);
-            photoPickerIntent.setType(content.toString());
-            photoPickerIntent.addCategory(Intent.CATEGORY_OPENABLE);
-            if (photoPickerIntent.resolveActivity(activity.getPackageManager()) != null) {
+        savedTask = CONTENT_PICKER;
+        savedContent = content;
+        if (isStoragePermissionGranted(activity, fragment)) {
+            this.targetFile = createFile(content);
+            if (Build.VERSION.SDK_INT < 19) {
+                Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+                photoPickerIntent.setType(content.toString());
                 if (fragment == null) {
                     activity.startActivityForResult(photoPickerIntent, CONTENT_PICKER);
                 } else {
                     fragment.startActivityForResult(photoPickerIntent, CONTENT_PICKER);
+                }
+            } else {
+                Intent photoPickerIntent = new Intent(Intent.ACTION_GET_CONTENT);
+                photoPickerIntent.setType(content.toString());
+                photoPickerIntent.addCategory(Intent.CATEGORY_OPENABLE);
+                if (photoPickerIntent.resolveActivity(activity.getPackageManager()) != null) {
+                    if (fragment == null) {
+                        activity.startActivityForResult(photoPickerIntent, CONTENT_PICKER);
+                    } else {
+                        fragment.startActivityForResult(photoPickerIntent, CONTENT_PICKER);
+                    }
                 }
             }
         }
     }
 
     public void takePhoto() {
-        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-            try {
-                boolean setPreDefinedCameraUri = isSetPreDefinedCameraUri();
+        savedTask = CONTENT_TAKE;
+        if (isStoragePermissionGranted(activity, fragment)) {
+            if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+                try {
+                    boolean setPreDefinedCameraUri = isSetPreDefinedCameraUri();
 
-                dateCameraIntentStarted = new Date();
-                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                if (setPreDefinedCameraUri) {
-                    String filename = System.currentTimeMillis() + ".jpg";
-                    ContentValues values = new ContentValues();
-                    values.put(MediaStore.Images.Media.TITLE, filename);
+                    dateCameraIntentStarted = new Date();
+                    Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    if (setPreDefinedCameraUri) {
+                        String filename = System.currentTimeMillis() + ".jpg";
+                        ContentValues values = new ContentValues();
+                        values.put(MediaStore.Images.Media.TITLE, filename);
 
-                    preDefinedCameraUri = activity.getContentResolver().insert(
-                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                            values);
-                    intent.putExtra(MediaStore.EXTRA_OUTPUT, preDefinedCameraUri);
+                        preDefinedCameraUri = activity.getContentResolver().insert(
+                                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                                values);
+                        intent.putExtra(MediaStore.EXTRA_OUTPUT, preDefinedCameraUri);
+                    }
+                    if (fragment == null) {
+                        activity.startActivityForResult(intent, CONTENT_TAKE);
+                    } else {
+                        fragment.startActivityForResult(intent, CONTENT_TAKE);
+                    }
+                } catch (ActivityNotFoundException e) {
+                    pickContentListener.onError("");
                 }
-                if (fragment == null) {
-                    activity.startActivityForResult(intent, CONTENT_TAKE);
-                } else {
-                    fragment.startActivityForResult(intent, CONTENT_TAKE);
-                }
-            } catch (ActivityNotFoundException e) {
+            } else {
                 pickContentListener.onError("");
             }
-        } else {
-            pickContentListener.onError("");
         }
     }
 
@@ -416,7 +430,7 @@ public class ContentManager {
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
-                                pickContentListener.onContentLoaded(Uri.fromFile(targetFile), contentType);
+                                pickContentListener.onContentLoaded(Uri.fromFile(targetFile), savedContent.toString());
                             }
                         });
                     } catch (final Exception e) {
@@ -617,5 +631,43 @@ public class ContentManager {
         mtx.postRotate(degree);
 
         return Bitmap.createBitmap(bitmap, 0, 0, w, h, mtx, true);
+    }
+
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0) {
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    switch (savedTask) {
+                        case CONTENT_PICKER:
+                            pickContent(savedContent);
+                            break;
+                        case CONTENT_TAKE:
+                            takePhoto();
+                            break;
+                    }
+                }
+            }
+        }
+    }
+
+    //For fragments
+    public static boolean isStoragePermissionGranted(Activity activity, Fragment fragment) {
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (ContextCompat.checkSelfPermission(activity, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+                return true;
+            } else {
+                if (fragment == null) {
+                    ActivityCompat.requestPermissions(activity,
+                            new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+                } else {
+                    fragment.requestPermissions(
+                            new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+                }
+                return false;
+            }
+        } else {
+            return true;
+        }
     }
 }

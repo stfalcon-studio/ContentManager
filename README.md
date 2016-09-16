@@ -10,7 +10,7 @@ Add the folowing permission to AndroidManifest.xml:
 
 Download via Gradle:
 ```gradle
-compile 'com.github.stfalcon:contentmanager:0.1.1'
+compile 'com.github.stfalcon:contentmanager:0.2'
 ```
 
 or Maven:

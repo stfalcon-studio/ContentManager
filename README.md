@@ -3,11 +3,6 @@ Library for getting photo or video from a device gallery, cloud or camera. With 
 
 ### Download
 
-Add the folowing permission to AndroidManifest.xml:
-```xml
-<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-```
-
 Download via Gradle:
 ```gradle
 compile 'com.github.stfalcon:contentmanager:0.2'
@@ -24,6 +19,11 @@ or Maven:
 ```
 
 ### Usage
+
+Add the folowing permission to AndroidManifest.xml:
+```xml
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+```
 
 Implement callback interface:
 ```java

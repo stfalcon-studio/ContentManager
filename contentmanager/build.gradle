@@ -22,7 +22,7 @@ android {
 publish {
     groupId = 'com.github.stfalcon'
     artifactId = 'contentmanager'
-    publishVersion = '0.2'
+    publishVersion = '0.3'
     desc = 'Library that helps a few lines of code to get pictures and video from the android file system, or ures cloud, as well as the camera device.'
     licences = ['Apache-2.0']
     uploadName='ContentManager'

@@ -390,7 +390,7 @@ public class ContentManager {
             }
 
             if (photoUri != null) {
-                pickContentListener.onContentLoaded(photoUri, "image");
+                pickContentListener.onContentLoaded(photoUri, Content.IMAGE.toString());
             } else {
                 pickContentListener.onError("");
             }

@@ -5,7 +5,7 @@ Library for getting photo or video from a device gallery, cloud or camera. With 
 
 Download via Gradle:
 ```gradle
-compile 'com.github.stfalcon:contentmanager:0.1.1'
+compile 'com.github.stfalcon:contentmanager:0.3'
 ```
 
 or Maven:
@@ -13,12 +13,17 @@ or Maven:
 <dependency>
   <groupId>com.github.stfalcon</groupId>
   <artifactId>contentmanager</artifactId>
-  <version>0.1.1</version>
+  <version>0.3</version>
   <type>pom</type>
 </dependency>
 ```
 
 ### Usage
+
+Add the folowing permission to AndroidManifest.xml:
+```xml
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+```
 
 Implement callback interface:
 ```java
@@ -90,6 +95,15 @@ Override onActivityResult method of activity. It is needed for handling the resu
 protected void onActivityResult(int requestCode, int resultCode, Intent data) {
   super.onActivityResult(requestCode, resultCode, data);
   contentManager.onActivityResult(requestCode, resultCode, data);
+}
+```
+
+Override onRequestPermissionsResult method to handle realtime permissions:
+```java
+@Override
+public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    contentManager.onRequestPermissionsResult(requestCode, permissions, grantResults);
 }
 ```
 

@@ -5,7 +5,7 @@ Library for getting photo or video from a device gallery, cloud or camera. With 
 
 Download via Gradle:
 ```gradle
-compile 'com.github.stfalcon:contentmanager:0.3'
+compile 'com.github.stfalcon:contentmanager:0.4'
 ```
 
 or Maven:
@@ -13,7 +13,7 @@ or Maven:
 <dependency>
   <groupId>com.github.stfalcon</groupId>
   <artifactId>contentmanager</artifactId>
-  <version>0.3</version>
+  <version>0.4</version>
   <type>pom</type>
 </dependency>
 ```
@@ -40,13 +40,16 @@ Then implement PickContentListener methods:
 */
 @Override
 public void onContentLoaded(Uri uri, String contentType) {
-  if (contentType.equals(ContentManager.Content.IMAGE.toString())) {
-    //You can use any library for display image: Fresco, Picasso, ImageLoader and etc.
-    //For sample:
-    ImageLoader.getInstance().displayImage(uri.toString(), ivPicture);
-  } else {
-    //handle video if needed
-  }
+   if (contentType.equals(ContentManager.Content.IMAGE.toString())) {
+       //You can use any library for display image Fresco, Picasso, ImageLoader
+       //For sample:
+       ImageLoader.getInstance().displayImage(uri.toString(), ivPicture);
+   } else if (contentType.equals(ContentManager.Content.FILE.toString())) {
+       //handle file result
+       Toast.makeText(this, uri.toString(), Toast.LENGTH_SHORT).show();
+   } else {
+       //handle video result if needed
+   }
 }
         
 /**
@@ -125,6 +128,10 @@ protected void onSaveInstanceState(Bundle outState) {
 Pick image: 
 ```java
 contentManager.pickContent(ContentManager.Content.IMAGE);
+```
+Pick file of any type: 
+```java
+contentManager.pickContent(ContentManager.Content.FILE);
 ```
 Pick video:
 ```jave

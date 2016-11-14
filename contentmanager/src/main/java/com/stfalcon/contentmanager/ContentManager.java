@@ -536,7 +536,8 @@ public class ContentManager {
      */
     public enum Content {
         VIDEO("video/*"),
-        IMAGE("image/*");
+        IMAGE("image/*"),
+        FILE("*/*");
 
         private final String text;
 

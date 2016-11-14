@@ -9,18 +9,32 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.stfalcon.contentmanager_sample.MainActivity">
 
-    <Button
-        android:id="@+id/btn_pick"
-        android:layout_width="100dp"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Pick image" />
+        android:gravity="center">
 
-    <Button
-        android:id="@+id/btn_take"
-        android:layout_width="wrap_content"
-        android:layout_height="48dp"
-        android:layout_alignParentRight="true"
-        android:text="Take photo" />
+        <Button
+            android:id="@+id/btn_pick"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pick image" />
+
+        <Button
+            android:id="@+id/btn_take"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:text="Take photo" />
+
+        <Button
+            android:id="@+id/btn_pick_file"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_alignParentRight="true"
+            android:text="Pick File" />
+
+    </LinearLayout>
 
 
     <ImageView

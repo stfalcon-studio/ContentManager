@@ -8,8 +8,8 @@ android {
     defaultConfig {
         minSdkVersion 16
         targetSdkVersion 23
-        versionCode 2
-        versionName "0.3"
+        versionCode 3
+        versionName "0.4"
     }
     buildTypes {
         release {
@@ -22,7 +22,7 @@ android {
 publish {
     groupId = 'com.github.stfalcon'
     artifactId = 'contentmanager'
-    publishVersion = '0.3'
+    publishVersion = '0.4'
     desc = 'Library that helps a few lines of code to get pictures and video from the android file system, or ures cloud, as well as the camera device.'
     licences = ['Apache-2.0']
     uploadName='ContentManager'

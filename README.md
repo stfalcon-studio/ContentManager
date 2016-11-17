@@ -5,7 +5,7 @@ Library for getting photo or video from a device gallery, cloud or camera. With 
 
 Download via Gradle:
 ```gradle
-compile 'com.github.stfalcon:contentmanager:0.4'
+compile 'com.github.stfalcon:contentmanager:0.3'
 ```
 
 or Maven:
@@ -13,7 +13,7 @@ or Maven:
 <dependency>
   <groupId>com.github.stfalcon</groupId>
   <artifactId>contentmanager</artifactId>
-  <version>0.4</version>
+  <version>0.3</version>
   <type>pom</type>
 </dependency>
 ```
@@ -44,9 +44,6 @@ public void onContentLoaded(Uri uri, String contentType) {
        //You can use any library for display image Fresco, Picasso, ImageLoader
        //For sample:
        ImageLoader.getInstance().displayImage(uri.toString(), ivPicture);
-   } else if (contentType.equals(ContentManager.Content.FILE.toString())) {
-       //handle file result
-       Toast.makeText(this, uri.toString(), Toast.LENGTH_SHORT).show();
    } else {
        //handle video result if needed
    }
@@ -129,10 +126,7 @@ Pick image:
 ```java
 contentManager.pickContent(ContentManager.Content.IMAGE);
 ```
-Pick file of any type: 
-```java
-contentManager.pickContent(ContentManager.Content.FILE);
-```
+
 Pick video:
 ```jave
 contentManager.pickContent(ContentManager.Content.VIDEO);

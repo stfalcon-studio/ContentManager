@@ -40,13 +40,13 @@ Then implement PickContentListener methods:
 */
 @Override
 public void onContentLoaded(Uri uri, String contentType) {
-  if (contentType.equals(ContentManager.Content.IMAGE.toString())) {
-    //You can use any library for display image: Fresco, Picasso, ImageLoader and etc.
-    //For sample:
-    ImageLoader.getInstance().displayImage(uri.toString(), ivPicture);
-  } else {
-    //handle video if needed
-  }
+   if (contentType.equals(ContentManager.Content.IMAGE.toString())) {
+       //You can use any library for display image Fresco, Picasso, ImageLoader
+       //For sample:
+       ImageLoader.getInstance().displayImage(uri.toString(), ivPicture);
+   } else {
+       //handle video result if needed
+   }
 }
         
 /**
@@ -126,6 +126,7 @@ Pick image:
 ```java
 contentManager.pickContent(ContentManager.Content.IMAGE);
 ```
+
 Pick video:
 ```jave
 contentManager.pickContent(ContentManager.Content.VIDEO);

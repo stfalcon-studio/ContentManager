@@ -8,7 +8,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
@@ -31,13 +30,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //Init views
         Button btnTake = (Button) findViewById(R.id.btn_take);
         Button btnPick = (Button) findViewById(R.id.btn_pick);
-        Button btnPickFile = (Button) findViewById(R.id.btn_pick_file);
         ivPicture = (ImageView) findViewById(R.id.iv_picture);
 
         //Set on click listeners for buttons
         btnTake.setOnClickListener(this);
         btnPick.setOnClickListener(this);
-        btnPickFile.setOnClickListener(this);
 
         //Must be in Application class, but it is just for sample
         ImageLoader.getInstance().init(ImageLoaderConfiguration.createDefault(this));
@@ -49,10 +46,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btn_pick:
                 //Pick photo from gallery or cloud
                 contentManager.pickContent(ContentManager.Content.IMAGE);
-                break;
-            case R.id.btn_pick_file:
-                //Pick files of any type
-                contentManager.pickContent(ContentManager.Content.FILE);
                 break;
             case R.id.btn_take:
                 //Take photo from camera
@@ -100,10 +93,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //You can use any library for display image Fresco, Picasso, ImageLoader
             //For sample:
             ImageLoader.getInstance().displayImage(uri.toString(), ivPicture);
-        } else if (contentType.equals(ContentManager.Content.FILE.toString())) {
-            //handle file result
-            Toast.makeText(this, uri.toString(), Toast.LENGTH_SHORT).show();
-        } else {
+        }  else {
             //handle video result if needed
         }
     }

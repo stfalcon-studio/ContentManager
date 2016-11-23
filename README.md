@@ -5,7 +5,7 @@ Library for getting photo or video from a device gallery, cloud or camera. With 
 
 Download via Gradle:
 ```gradle
-compile 'com.github.stfalcon:contentmanager:0.3'
+compile 'com.github.stfalcon:contentmanager:0.4.2'
 ```
 
 or Maven:
@@ -13,7 +13,7 @@ or Maven:
 <dependency>
   <groupId>com.github.stfalcon</groupId>
   <artifactId>contentmanager</artifactId>
-  <version>0.3</version>
+  <version>0.4.2</version>
   <type>pom</type>
 </dependency>
 ```

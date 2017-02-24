@@ -16,7 +16,6 @@
 
 package com.stfalcon.contentmanager;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
@@ -61,11 +60,16 @@ public class ContentManager {
     private static final String CAMERA_PIC_URI_STATE = "com.stfalcon.contentmanager.ContentManager.CAMERA_PIC_URI_STATE";
     private static final String PHOTO_URI_STATE = "com.stfalcon.contentmanager.ContentManager.PHOTO_URI_STATE";
     private static final String ROTATE_X_DEGREES_STATE = "com.stfalcon.contentmanager.ContentManager.ROTATE_X_DEGREES_STATE";
+    private static final String SAVED_TASK_STATE = "com.stfalcon.contentmanager.ContentManager.SAVED_TASK";
+    private static final String TARGET_FILE_STATE = "com.stfalcon.contentmanager.ContentManager.TARGET_FILE";
+    private static final String SAVED_CONTENT_STATE = "com.stfalcon.contentmanager.ContentManager.SAVED_CONTENT";
+
     /**
      * Request codes
      */
     private static final int CONTENT_PICKER = 15; // request codes
     private static final int CONTENT_TAKE = 16; //
+
     /**
      * Date and time the camera intent was started.
      */
@@ -130,6 +134,13 @@ public class ContentManager {
         if (photoUri != null) {
             savedInstanceState.putString(PHOTO_URI_STATE, photoUri.toString());
         }
+        if (targetFile != null) {
+            savedInstanceState.putSerializable(TARGET_FILE_STATE, targetFile);
+        }
+        if (savedContent != null) {
+            savedInstanceState.putSerializable(SAVED_CONTENT_STATE, savedContent);
+        }
+        savedInstanceState.putInt(SAVED_TASK_STATE, savedTask);
         savedInstanceState.putInt(ROTATE_X_DEGREES_STATE, rotateXDegrees);
     }
 
@@ -150,6 +161,15 @@ public class ContentManager {
             }
             if (savedInstanceState.containsKey(ROTATE_X_DEGREES_STATE)) {
                 rotateXDegrees = savedInstanceState.getInt(ROTATE_X_DEGREES_STATE);
+            }
+            if (savedInstanceState.containsKey(TARGET_FILE_STATE)) {
+                targetFile = (File) savedInstanceState.getSerializable(TARGET_FILE_STATE);
+            }
+            if (savedInstanceState.containsKey(SAVED_CONTENT_STATE)) {
+                savedContent = (Content) savedInstanceState.getSerializable(SAVED_CONTENT_STATE);
+            }
+            if (savedInstanceState.containsKey(SAVED_TASK_STATE)) {
+                savedTask = savedInstanceState.getInt(SAVED_TASK_STATE);
             }
         }
     }
@@ -416,6 +436,9 @@ public class ContentManager {
                         consumeProgress();
 
                         FileInputStream in = (FileInputStream) activity.getContentResolver().openInputStream(contentVideoUri);
+                        if (targetFile == null) {
+                            targetFile = createFile(savedContent);
+                        }
                         FileOutputStream out = new FileOutputStream(targetFile);
                         FileChannel inChannel = in.getChannel();
                         FileChannel outChannel = out.getChannel();

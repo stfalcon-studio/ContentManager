@@ -1,5 +1,5 @@
 # ContentManager
-Library for getting photo or video from a device gallery, cloud or camera. With asynchronous load from the cloud and fixed bugs for some problem devices like Samsung or Sony.
+Library for getting photos, videos or files of any type from a device gallery, external storage, cloud(Google Drive, Dropbox and etc) or camera. With asynchronous load from the cloud and fixed bugs for some problem devices like Samsung or Sony.
 
 ### Who we are
 Need iOS and Android apps, MVP development or prototyping? Contact us via info@stfalcon.com. We develop software since 2009, and we're known experts in this field. Check out our [portfolio](https://stfalcon.com/en/portfolio) and see more libraries from [stfalcon-studio](https://stfalcon-studio.github.io/).
@@ -8,7 +8,7 @@ Need iOS and Android apps, MVP development or prototyping? Contact us via info@s
 
 Download via Gradle:
 ```gradle
-compile 'com.github.stfalcon:contentmanager:0.4.3'
+compile 'com.github.stfalcon:contentmanager:0.5'
 ```
 
 or Maven:
@@ -16,10 +16,14 @@ or Maven:
 <dependency>
   <groupId>com.github.stfalcon</groupId>
   <artifactId>contentmanager</artifactId>
-  <version>0.4.3</version>
+  <version>0.5</version>
   <type>pom</type>
 </dependency>
 ```
+
+### Migration to version 0.5
+
+In version 0.5 we have removed callback ```onLoadContentProgress(int loadPercent)```(because it is very hard to calculate loadPercent correctly) and replaced it with callback ```onStartContentLoading()``` to handle a start of loading content. So if you are using ContentManager previous version, you need to make some correction after updating ContentManager version to 0.5.
 
 ### Usage
 
@@ -47,19 +51,19 @@ public void onContentLoaded(Uri uri, String contentType) {
        //You can use any library for display image Fresco, Picasso, ImageLoader
        //For sample:
        ImageLoader.getInstance().displayImage(uri.toString(), ivPicture);
-   } else {
-       //handle video result if needed
+   } else if (contentType.equals(ContentManager.Content.FILE.toString())) {
+       //handle file result
+       tvUri.setText(uri.toString());
    }
 }
         
 /**
-* Return progress of load content from cloud
-*
-* @param loadPercent load progress in percent
+* Call when loading started
 */
 @Override
-public void onLoadContentProgress(int loadPercent) {
+public void onStartContentLoading() {
   //Show loader or something like that
+  progressBar.setVisibility(View.VISIBLE);
 }
 
 /**
@@ -134,7 +138,11 @@ Pick video:
 ```jave
 contentManager.pickContent(ContentManager.Content.VIDEO);
 ```
-If you select content from cloud, it will be loaded asynchronously and you can track progress with onLoadContentProgress method.
+
+Pick file:
+```java
+contentManager.pickContent(ContentManager.Content.FILE);
+```
 
 Take photo from camera:
 ```

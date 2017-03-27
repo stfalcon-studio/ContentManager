@@ -8,7 +8,7 @@ Need iOS and Android apps, MVP development or prototyping? Contact us via info@s
 
 Download via Gradle:
 ```gradle
-compile 'com.github.stfalcon:contentmanager:0.4.2'
+compile 'com.github.stfalcon:contentmanager:0.4.3'
 ```
 
 or Maven:
@@ -16,7 +16,7 @@ or Maven:
 <dependency>
   <groupId>com.github.stfalcon</groupId>
   <artifactId>contentmanager</artifactId>
-  <version>0.4.2</version>
+  <version>0.4.3</version>
   <type>pom</type>
 </dependency>
 ```

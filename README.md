@@ -24,6 +24,7 @@ or Maven:
 ### Migration to version 0.5
 
 In version 0.5 we have removed callback ```onLoadContentProgress(int loadPercent)```(because it is very hard to calculate loadPercent correctly) and replaced it with callback ```onStartContentLoading()``` to handle a start of loading content. So if you are using ContentManager previous version, you need to make some correction after updating ContentManager version to 0.5.
+Also, we have added new cool feature: picking files with any types.
 
 ### Usage
 
@@ -150,6 +151,9 @@ contentManager.takePhoto();
 ```
 
 Take a look at [Sample projects] [sample] for more information
+
+### Thanks
+Thanks @coomar2841 https://github.com/coomar2841/android-multipicker-library. We peeked at him some points in the implementation of picking files.
 
 ### License 
 

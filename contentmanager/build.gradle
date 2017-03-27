@@ -1,15 +1,20 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.novoda.bintray-release'
 
+ext {
+    VERSION_CODE = 4;
+    VERSION_NAME = "0.4.3"
+}
+
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+    buildToolsVersion '25.0.2'
 
     defaultConfig {
         minSdkVersion 16
         targetSdkVersion 23
-        versionCode 4
-        versionName "0.4.3"
+        versionCode VERSION_CODE
+        versionName VERSION_NAME
     }
     buildTypes {
         release {
@@ -22,10 +27,10 @@ android {
 publish {
     groupId = 'com.github.stfalcon'
     artifactId = 'contentmanager'
-    publishVersion = '0.4.3'
+    publishVersion = VERSION_NAME
     desc = 'Library that helps a few lines of code to get pictures and video from the android file system, or ures cloud, as well as the camera device.'
     licences = ['Apache-2.0']
-    uploadName='ContentManager'
+    uploadName = 'ContentManager'
     website = 'https://github.com/stfalcon-studio/ContentManager.git'
 }
 

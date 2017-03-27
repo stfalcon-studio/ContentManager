@@ -10,33 +10,55 @@
     tools:context="com.stfalcon.contentmanager_sample.MainActivity">
 
     <LinearLayout
+        android:id="@+id/container_buttons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center">
 
         <Button
-            android:id="@+id/btn_pick"
+            android:id="@+id/btn_pick_image"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Pick image" />
+            android:text="@string/pick_image" />
 
         <Button
             android:id="@+id/btn_take"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
-            android:text="Take photo" />
+            android:text="@string/take_photo" />
+
+        <Button
+            android:id="@+id/btn_pick_file"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/pick_file" />
 
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_uri"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/container_buttons"
+        android:layout_marginTop="16dp"
+        android:textColor="@color/colorPrimary" />
 
 
     <ImageView
         android:id="@+id/iv_picture"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"
+        android:layout_below="@+id/tv_uri"
         android:adjustViewBounds="true"
         android:background="@android:color/darker_gray"
         android:scaleType="centerCrop" />
+
+    <ProgressBar
+        android:id="@+id/progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:visibility="gone" />
 
 </RelativeLayout>

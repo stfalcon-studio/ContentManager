@@ -16,9 +16,12 @@
 
 package com.stfalcon.contentmanager;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.ClipData;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -31,13 +34,19 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.ParcelFileDescriptor;
+import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -46,9 +55,12 @@ import java.nio.channels.FileChannel;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.UUID;
 
 public class ContentManager {
     private final static int PERMISSION_REQUEST_CODE = 333;
@@ -211,6 +223,7 @@ public class ContentManager {
             } else {
                 Intent photoPickerIntent = new Intent(Intent.ACTION_GET_CONTENT);
                 photoPickerIntent.setType(content.toString());
+                photoPickerIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 photoPickerIntent.addCategory(Intent.CATEGORY_OPENABLE);
                 if (photoPickerIntent.resolveActivity(activity.getPackageManager()) != null) {
                     if (fragment == null) {
@@ -428,44 +441,11 @@ public class ContentManager {
      */
     private void handleContentData(final Intent data) {
         if (data != null) {
-            new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        Uri contentVideoUri = data.getData();
-
-                        consumeProgress();
-
-                        FileInputStream in = (FileInputStream) activity.getContentResolver().openInputStream(contentVideoUri);
-                        if (targetFile == null) {
-                            targetFile = createFile(savedContent);
-                        }
-                        FileOutputStream out = new FileOutputStream(targetFile);
-                        FileChannel inChannel = in.getChannel();
-                        FileChannel outChannel = out.getChannel();
-                        inChannel.transferTo(0, inChannel.size(), outChannel);
-
-                        in.close();
-                        out.close();
-
-                        ContentResolver contentResolver = activity.getContentResolver();
-                        final String contentType = contentResolver.getType(contentVideoUri);
-
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                pickContentListener.onContentLoaded(Uri.fromFile(targetFile), savedContent.toString());
-                            }
-                        });
-                    } catch (final Exception e) {
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                pickContentListener.onError(e.getMessage());
-                            }
-                        });
-                    }
-                }
-            }).start();
+            if (savedContent != Content.FILE) {
+                handleMediaContent(data);
+            } else {
+                handleFileContent(data);
+            }
         } else {
             handler.post(new Runnable() {
                 @Override
@@ -476,19 +456,163 @@ public class ContentManager {
         }
     }
 
-    /**
-     * For showing load content progress
-     */
-    private void consumeProgress() {
-        handler.postDelayed(new Runnable() {
+    private void handleMediaContent(final Intent data) {
+        pickContentListener.onStartContentLoading();
+
+        new Thread(new Runnable() {
+            public void run() {
+                try {
+                    Uri contentVideoUri = data.getData();
+                    FileInputStream in = (FileInputStream) activity.getContentResolver().openInputStream(contentVideoUri);
+                    if (targetFile == null) {
+                        targetFile = createFile(savedContent);
+                    }
+                    FileOutputStream out = new FileOutputStream(targetFile);
+                    FileChannel inChannel = in.getChannel();
+                    FileChannel outChannel = out.getChannel();
+                    inChannel.transferTo(0, inChannel.size(), outChannel);
+
+                    in.close();
+                    out.close();
+
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            pickContentListener.onContentLoaded(Uri.fromFile(targetFile), savedContent.toString());
+                        }
+                    });
+                } catch (final Exception e) {
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            pickContentListener.onError(e.getMessage());
+                        }
+                    });
+                }
+            }
+        }).start();
+    }
+
+    private void handleFileContent(final Intent intent) {
+        List<String> uris = new ArrayList<>();
+        if (intent.getDataString() != null) {
+            String uri = intent.getDataString();
+            uris.add(uri);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            if (intent.getClipData() != null) {
+                ClipData clipData = intent.getClipData();
+                for (int i = 0; i < clipData.getItemCount(); i++) {
+                    ClipData.Item item = clipData.getItemAt(i);
+                    Log.d("TAG", "Item [" + i + "]: " + item.getUri().toString());
+                    uris.add(item.getUri().toString());
+                }
+            }
+        }
+        if (intent.hasExtra("uris")) {
+            ArrayList<Uri> paths = intent.getParcelableArrayListExtra("uris");
+            for (int i = 0; i < paths.size(); i++) {
+                uris.add(paths.get(i).toString());
+            }
+        }
+
+        //TODO Handle multiple file choose
+        processFile(uris.get(0));
+    }
+
+    private void processFile(final String queryUri) {
+        pickContentListener.onStartContentLoading();
+
+        new Thread(new Runnable() {
             @Override
             public void run() {
-                progressPercent++;
-                pickContentListener.onLoadContentProgress(
-                        progressPercent);
-                if (progressPercent < 100) consumeProgress();
+                String originalPath = null;
+                String uri = queryUri;
+                if (uri.startsWith("file://") || uri.startsWith("/")) {
+                    originalPath = sanitizeUri(uri);
+                } else if (uri.startsWith("content:")) {
+                    originalPath = getAbsolutePathIfAvailable(uri);
+                }
+                uri = originalPath;
+                // Still content:: Try ContentProvider stream import
+                if (uri.startsWith("content:")) {
+                    originalPath = getFileFromContentProvider(originalPath);
+                }
+
+                // Check for URL Encoded file paths
+                try {
+                    String decodedURL = Uri.parse(Uri.decode(originalPath)).toString();
+                    if (!decodedURL.equals(originalPath)) {
+                        originalPath = decodedURL;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                final String finalOriginalPath = originalPath;
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        pickContentListener.onContentLoaded(Uri.parse(finalOriginalPath), savedContent.toString());
+                    }
+                });
             }
-        }, 500);
+        }).start();
+
+    }
+
+    // Try to get a local copy if available
+
+    private String getAbsolutePathIfAvailable(String uri) {
+        String[] projection = {MediaStore.MediaColumns.DATA, MediaStore.MediaColumns.DISPLAY_NAME, MediaStore.MediaColumns.MIME_TYPE};
+        String originalPath;
+        if (uri.startsWith(
+                "content://com.android.gallery3d.provider")) {
+            originalPath = (Uri.parse(uri.replace(
+                    "com.android.gallery3d", "com.google.android.gallery3d")).toString());
+        } else {
+            originalPath = uri;
+        }
+        // Try to see if there's a cached local copy that is available
+        if (uri.startsWith("content://")) {
+            try {
+                Cursor cursor = activity.getContentResolver().query(Uri.parse(uri), projection,
+                        null, null, null);
+                cursor.moveToFirst();
+                try {
+                    // Samsung Bug
+                    if (!uri.contains("com.sec.android.gallery3d.provider")) {
+                        String path = cursor.getString(cursor
+                                .getColumnIndexOrThrow(MediaStore.MediaColumns.DATA));
+                        if (path != null) {
+                            originalPath = path;
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                cursor.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Check if DownloadsDocument in which case, we can get the local copy by using the content provider
+        if (originalPath.startsWith("content:") && isFileDownloadsDocument(Uri.parse(originalPath))) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                originalPath = getFilePath(originalPath);
+            }
+        }
+
+        return originalPath;
+    }
+
+
+    // If starts with file: (For some content providers, remove the file prefix)
+    private String sanitizeUri(String uri) {
+        if (uri.startsWith("file://")) {
+            return uri.substring(7);
+        }
+        return uri;
     }
 
     /**
@@ -508,7 +632,7 @@ public class ContentManager {
         try {
             image = File.createTempFile(
                     imageFileName,  /* prefix */
-                    type,         /* suffix */
+                    type,           /* suffix */
                     storageDir      /* directory */
             );
         } catch (IOException e) {
@@ -547,7 +671,7 @@ public class ContentManager {
     public interface PickContentListener {
         void onContentLoaded(Uri uri, String contentType);
 
-        void onLoadContentProgress(int loadPercent);
+        void onStartContentLoading();
 
         void onError(String error);
 
@@ -559,7 +683,8 @@ public class ContentManager {
      */
     public enum Content {
         VIDEO("video/*"),
-        IMAGE("image/*");
+        IMAGE("image/*"),
+        FILE("*/*");
 
         private final String text;
 
@@ -693,4 +818,161 @@ public class ContentManager {
             return true;
         }
     }
+
+
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    private String getFilePath(String originalPath) {
+
+        final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
+        Uri uri = Uri.parse(originalPath);
+        // DocumentProvider
+        if (isKitKat && DocumentsContract.isDocumentUri(activity, uri)) {
+            // ExternalStorageProvider
+            if (isFileDownloadsDocument(uri)) {
+                final String id = DocumentsContract.getDocumentId(uri);
+                final Uri contentUri = ContentUris.withAppendedId(
+                        Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
+
+                return getFileData(contentUri, null, null);
+            }
+            // MediaProvider
+            else if (isFileMediaDocument(uri)) {
+                final String docId = DocumentsContract.getDocumentId(uri);
+                final String[] split = docId.split(":");
+                final String type = split[0];
+
+                Uri contentUri = null;
+                if ("image".equals(type)) {
+                    contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+                } else if ("video".equals(type)) {
+                    contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+                } else if ("audio".equals(type)) {
+                    contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                }
+
+                final String selection = "_id=?";
+                final String[] selectionArgs = new String[]{
+                        split[1]
+                };
+
+                return getFileData(contentUri, selection, selectionArgs);
+            }
+        }
+        // MediaStore (and general)
+        else if ("content".equalsIgnoreCase(uri.getScheme())) {
+            return getFileData(uri, null, null);
+        }
+        // File
+        else if ("file".equalsIgnoreCase(uri.getScheme())) {
+            return uri.getPath();
+        }
+
+        return null;
+    }
+
+
+    private String getFileData(Uri uri, String selection,
+                               String[] selectionArgs) {
+        Cursor cursor = null;
+        String[] projection = {MediaStore.MediaColumns.DATA};
+
+        try {
+            cursor = activity.getContentResolver().query(uri, projection, selection, selectionArgs,
+                    null);
+            if (cursor != null && cursor.moveToFirst()) {
+                return cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA));
+            }
+        } finally {
+            if (cursor != null)
+                cursor.close();
+        }
+        return null;
+    }
+
+    private boolean isFileDownloadsDocument(Uri uri) {
+        return "com.android.providers.downloads.documents".equals(uri.getAuthority());
+    }
+
+    private boolean isFileMediaDocument(Uri uri) {
+        return "com.android.providers.media.documents".equals(uri.getAuthority());
+    }
+
+    protected String getFileFromContentProvider(String uri) {
+
+        BufferedInputStream inputStream = null;
+        BufferedOutputStream outStream = null;
+        ParcelFileDescriptor parcelFileDescriptor = null;
+        try {
+            String localFilePath = generateFileName(uri);
+            parcelFileDescriptor = activity
+                    .getContentResolver().openFileDescriptor(Uri.parse(uri), "r");
+
+            FileDescriptor fileDescriptor = parcelFileDescriptor
+                    .getFileDescriptor();
+
+            inputStream = new BufferedInputStream(new FileInputStream(fileDescriptor));
+            BufferedInputStream reader = new BufferedInputStream(inputStream);
+
+            outStream = new BufferedOutputStream(
+                    new FileOutputStream(localFilePath));
+            byte[] buf = new byte[2048];
+            int len;
+            while ((len = reader.read(buf)) > 0) {
+                outStream.write(buf, 0, len);
+            }
+            outStream.flush();
+            uri = localFilePath;
+        } catch (IOException e) {
+            return uri;
+        } finally {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                try {
+                    parcelFileDescriptor.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            try {
+                outStream.flush();
+                outStream.close();
+                inputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return uri;
+    }
+
+    private String generateFileName(String file) {
+        String fileName = UUID.randomUUID().toString() + "." + guessFileExtensionFromUrl(file);
+        String probableFileName = fileName;
+        File directory = activity.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+        File probableFile = new File(directory.getAbsolutePath() + File.separator + probableFileName);
+        int counter = 0;
+        while (probableFile.exists()) {
+            counter++;
+            if (fileName.contains(".")) {
+                int indexOfDot = fileName.lastIndexOf(".");
+                probableFileName = fileName.substring(0, indexOfDot - 1) + "-" + counter + "." + fileName.substring(indexOfDot + 1);
+            } else {
+                probableFileName = fileName + "(" + counter + ")";
+            }
+            probableFile = new File(directory.getAbsolutePath() + File.separator
+                    + probableFileName);
+        }
+        fileName = probableFileName;
+
+        return directory.getAbsolutePath() + File.separator
+                + fileName;
+    }
+
+    // Guess File extension from the file name
+    private String guessFileExtensionFromUrl(String url) {
+        ContentResolver cR = activity.getContentResolver();
+        MimeTypeMap mime = MimeTypeMap.getSingleton();
+        String type = mime.getExtensionFromMimeType(cR.getType(Uri.parse(url)));
+        cR.getType(Uri.parse(url));
+        return type;
+    }
+
 }

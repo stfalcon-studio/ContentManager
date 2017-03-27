@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">ContentManager</string>
+    <string name="tap_to_open">%s (Tap to open file)</string>
+    <string name="pick_image">Pick image</string>
+    <string name="take_photo">Take photo</string>
+    <string name="pick_file">Pick File</string>
 </resources>

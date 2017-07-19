@@ -150,13 +150,14 @@ Take photo from camera:
 contentManager.takePhoto();
 ```
 
-Take a look at [Sample projects] [sample] for more information
+Take a look at the [sample project](sample) for more information
 
 ### Thanks
-Thanks @coomar2841 https://github.com/coomar2841/android-multipicker-library. We peeked at him some points in the implementation of picking files.
+Thanks to [@coomar2841](https://github.com/coomar2841) and his [Android Multipicker Library](https://github.com/coomar2841/android-multipicker-library). We peeked at him some points in the implementation of picking files.
 
 ### License 
 
+```
 Copyright 2016 stfalcon.com
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -170,6 +171,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+```
 
 
 
